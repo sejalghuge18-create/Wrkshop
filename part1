@@ -1,0 +1,35 @@
+# ---- Setup: run this cell first ----
+!pip install -q pytest
+
+import glob
+import os
+import subprocess
+
+import pandas as pd
+
+# Instructor: set DATA_URL to the link of the card-spend practice zip.
+DATA_URL = "https://github.com/MJMortensonWarwick/adminaeaiv/releases/download/testgitsession/card-spend-practice.zip"
+DATA_DIR = "/content/card-spend"
+
+# Download only if no CSV files are there yet. The CSVs may sit inside a folder within the zip.
+if DATA_URL and not glob.glob(os.path.join(DATA_DIR, "**", "*.csv"), recursive=True):
+    import urllib.request
+    import zipfile
+    os.makedirs(DATA_DIR, exist_ok=True)
+    urllib.request.urlretrieve(DATA_URL, "/content/card-spend.zip")
+    zipfile.ZipFile("/content/card-spend.zip").extractall(DATA_DIR)
+
+
+def find(filename):
+    found = glob.glob(os.path.join(DATA_DIR, "**", filename), recursive=True)
+    if not found:
+        have = sorted(os.path.basename(f) for f in glob.glob(os.path.join(DATA_DIR, "**", "*.csv"), recursive=True))
+        raise FileNotFoundError(f"Missing {filename}. CSV files found under {DATA_DIR}: {have}. Ask for help.")
+    return found[0]
+
+
+bronze_tx = pd.read_csv(find("card_transactions.csv"), dtype={"ref_txn_id": "string"})
+bronze_cu = pd.read_csv(find("customer_master.csv"))
+
+WORK = os.getcwd()   # the folder where this notebook works; Part 2 returns to it
+print(f"bronze_tx: {bronze_tx.shape[0]:,} rows | bronze_cu: {bronze_cu.shape[0]:,} rows | working folder: {WORK}")
